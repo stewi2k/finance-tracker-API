@@ -1,12 +1,12 @@
-package services
+package users
 
 import (
 	"errors"
 
-	"github.com/stevenwijaya/finance-tracker/models"
+	models "github.com/stevenwijaya/finance-tracker/models/users"
 	"github.com/stevenwijaya/finance-tracker/pkg/log"
 	"github.com/stevenwijaya/finance-tracker/pkg/utils"
-	"github.com/stevenwijaya/finance-tracker/repositories"
+	repositories "github.com/stevenwijaya/finance-tracker/repositories/users"
 )
 
 func RegisterUser(user *models.User) error {
@@ -39,6 +39,21 @@ func LoginUser(username, password string) (*models.User, error) {
 	if !utils.CheckPasswordHash(user.Password, password) {
 		log.Error("Invalid password")
 		return nil, errors.New("Invalid Credentials")
+	}
+
+	return user, nil
+}
+
+func GetUserById(userId uint) (*models.User, error) {
+	user, err := repositories.GetUserByID(userId)
+	if err != nil {
+		log.Error("Error fetching user by username:", err)
+		return nil, err
+	}
+
+	if user == nil {
+		log.Error("User not found")
+		return nil, errors.New("invalid credentials")
 	}
 
 	return user, nil

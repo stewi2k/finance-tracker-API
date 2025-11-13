@@ -6,11 +6,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stevenwijaya/finance-tracker/config"
 	"github.com/stevenwijaya/finance-tracker/database"
+	"github.com/stevenwijaya/finance-tracker/pkg/log"
+	"github.com/stevenwijaya/finance-tracker/pkg/validator"
 	"github.com/stevenwijaya/finance-tracker/router"
 )
 
 func initApp() {
 	// Initialize configurations, database connections, etc.
+	log.InitLogger()
+	validator.InitValidator()
 	config.LoadConfig()
 	database.ConnectDatabase()
 }

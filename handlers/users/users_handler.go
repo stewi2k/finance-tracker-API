@@ -1,4 +1,4 @@
-package handlers
+package users
 
 import (
 	"net/http"
@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/stevenwijaya/finance-tracker/models"
+	models "github.com/stevenwijaya/finance-tracker/models/users"
 	"github.com/stevenwijaya/finance-tracker/pkg/log"
-	"github.com/stevenwijaya/finance-tracker/services"
+	services "github.com/stevenwijaya/finance-tracker/services/users"
 )
 
 func Register(c *gin.Context) {
@@ -65,7 +65,7 @@ func Login(c *gin.Context) {
 
 // Profile handler untuk test JWT
 func Profile(c *gin.Context) {
-	userID := c.GetInt("user_id")
+	userID := c.GetUint("user_id")
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Authenticated user profile",
 		"user_id": userID,

@@ -9,6 +9,7 @@ func InitRouter() *gin.Engine {
 
 	//tambahkan router modular disini
 	InitUserRouter(router)
+	InitTransactionRouter(router)
 
 	return router
 }
