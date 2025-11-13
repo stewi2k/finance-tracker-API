@@ -1,0 +1,41 @@
+# Go build files and binaries
+*.exe
+*.dll
+*.so
+*.test
+*.out
+*.log
+
+# Build output
+bin/
+build/
+dist/
+tmp/
+cache/
+
+# Logs and temp files
+logs/
+*.log
+*.tmp
+*.bak
+
+# Environment files
+.env
+.env.*
+.env.local
+.env.backup
+
+# Dependencies
+vendor/
+node_modules/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated
+.DS_Store
+Thumbs.db
+desktop.ini

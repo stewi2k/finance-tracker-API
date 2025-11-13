@@ -4,7 +4,8 @@ import (
 	"fmt"
 
 	"github.com/stevenwijaya/finance-tracker/config"
-	"github.com/stevenwijaya/finance-tracker/models"
+	"github.com/stevenwijaya/finance-tracker/models/transactions"
+	"github.com/stevenwijaya/finance-tracker/models/users"
 	"github.com/stevenwijaya/finance-tracker/pkg/log"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -26,6 +27,7 @@ func ConnectDatabase() {
 
 	log.Info("Connected to PostgreSQL Success")
 
-	db.AutoMigrate(&models.User{}, &models.Transaction{})
+	db.AutoMigrate(&users.User{})
+	db.AutoMigrate(&transactions.Transaction{})
 	DB = db
 }

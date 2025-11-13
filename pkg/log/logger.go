@@ -10,11 +10,11 @@ import (
 
 var Log *logrus.Logger
 
-func init() {
+func InitLogger() {
 	Log = logrus.New()
 
 	date := time.Now().Format("2006-01-02")
-	logDir := "../logs"
+	logDir := "logs"
 	logFile := logDir + "/log-" + date + ".log"
 
 	if _, err := os.Stat(logDir); os.IsNotExist(err) {
@@ -48,6 +48,10 @@ func Warn(args ...interface{}) {
 
 func Error(args ...interface{}) {
 	Log.Error(args...)
+}
+
+func Errorf(format string, args ...interface{}) {
+	Log.Errorf(format, args...)
 }
 
 func Debug(args ...interface{}) {

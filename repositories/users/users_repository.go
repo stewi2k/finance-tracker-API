@@ -1,10 +1,10 @@
-package repositories
+package usersRepositories
 
 import (
 	"errors"
 
 	"github.com/stevenwijaya/finance-tracker/database"
-	"github.com/stevenwijaya/finance-tracker/models"
+	models "github.com/stevenwijaya/finance-tracker/models/users"
 	"gorm.io/gorm"
 )
 
@@ -28,7 +28,7 @@ func GetUserByUsername(username string) (*models.User, error) {
 
 func GetUserByID(id uint) (*models.User, error) {
 	var user models.User
-	result := database.DB.First(&user, &id)
+	result := database.DB.Where("id = ?", &id).First(&user)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, errors.New("user not found")
