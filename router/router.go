@@ -9,6 +9,7 @@ func InitRouter() *gin.Engine {
 	router := gin.Default()
 
 	router.Use(middleware.LoggerMiddleware())
+	router.Use(middleware.RateLimiter())
 
 	//tambahkan router modular disini
 	InitUserRouter(router)
