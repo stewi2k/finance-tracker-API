@@ -9,6 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	models "github.com/stevenwijaya/finance-tracker/models/users"
 	"github.com/stevenwijaya/finance-tracker/pkg/log"
+	"github.com/stevenwijaya/finance-tracker/pkg/response"
 	services "github.com/stevenwijaya/finance-tracker/services/users"
 )
 
@@ -16,18 +17,18 @@ func Register(c *gin.Context) {
 	var input models.User
 	if err := c.ShouldBindJSON(&input); err != nil {
 		log.Error("Invalid input data:", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.Error(c, http.StatusBadRequest, "invalid input format :"+err.Error())
 		return
 	}
 
 	if err := services.RegisterUser(&input); err != nil {
 		log.Error("Failed to register user:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
+		response.Error(c, http.StatusInternalServerError, "Failed to register user : "+err.Error())
 		return
 	}
 
 	log.Info("User registered successfully:", input.Username)
-	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
+	response.Success(c, http.StatusOK, "User registered successfully", input)
 }
 
 func Login(c *gin.Context) {
@@ -38,14 +39,14 @@ func Login(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		log.Error("Invalid input data:", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.Error(c, http.StatusBadGateway, "invalid input data : "+err.Error())
 		return
 	}
 
 	user, err := services.LoginUser(input.Username, input.Password)
 	if err != nil {
 		log.Error("Login failed: ", err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		response.Error(c, http.StatusUnauthorized, "Login Failed")
 		return
 	}
 
@@ -57,17 +58,15 @@ func Login(c *gin.Context) {
 	tokenString, _ := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 
 	log.Info("User logged in successfully:", input.Username)
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Login successful",
-		"token":   tokenString,
+	response.Success(c, http.StatusOK, "User logged in successfully", gin.H{
+		"token": tokenString,
 	})
 }
 
 // Profile handler untuk test JWT
 func Profile(c *gin.Context) {
 	userID := c.GetUint("user_id")
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Authenticated user profile",
+	response.Success(c, http.StatusOK, "Authenticated user profile", gin.H{
 		"user_id": userID,
 	})
 }

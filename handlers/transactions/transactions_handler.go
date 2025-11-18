@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	models "github.com/stevenwijaya/finance-tracker/models/transactions"
 	"github.com/stevenwijaya/finance-tracker/pkg/log"
+	"github.com/stevenwijaya/finance-tracker/pkg/response"
 	"github.com/stevenwijaya/finance-tracker/pkg/utils"
 	"github.com/stevenwijaya/finance-tracker/pkg/validator"
 	services "github.com/stevenwijaya/finance-tracker/services/transactions"
@@ -19,25 +20,25 @@ func CreateTransaction(c *gin.Context) {
 	var input models.Transaction
 	if err := c.ShouldBindBodyWithJSON(&input); err != nil {
 		log.Error("Invalid transaction input : ", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.Error(c, http.StatusBadRequest, "Invalid transaction input : "+err.Error())
 		return
 	}
 
 	if err := validator.Validate.Struct(&input); err != nil {
 		log.Warn("Transaction validation failed : ", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.Error(c, http.StatusBadRequest, "Transaction validation failed : "+err.Error())
 		return
 	}
 
 	input.UserID = &userId
 
 	if err := services.CreateTransaction(&input); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create transaction"})
+		response.Error(c, http.StatusBadRequest, "Failed to created transaction : "+err.Error())
 		return
 	}
 
 	log.Info("Transaction created for user : ", userId)
-	c.JSON(http.StatusCreated, gin.H{"message": "Transaction Created", "transaction": input})
+	response.Success(c, http.StatusOK, "Transaction created successfully", input)
 }
 
 // get all transaction
@@ -54,11 +55,11 @@ func GetAllTransaction(c *gin.Context) {
 
 	transactions, err := services.GetAllTransaction(userId, filters, pagination)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.Error(c, http.StatusNotFound, "Failed to get transaction : "+err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	response.Success(c, http.StatusOK, "Get transaction succesfully", gin.H{
 		"page":         pagination.Page,
 		"limit":        pagination.Limit,
 		"total":        len(transactions),
@@ -71,7 +72,7 @@ func GetTransactionById(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid transaction ID"})
+		response.Error(c, http.StatusBadRequest, "Invalid input transaction id : "+err.Error())
 		return
 	}
 
@@ -79,11 +80,11 @@ func GetTransactionById(c *gin.Context) {
 
 	transaction, err := services.GetTransactionById(uint(id), userId)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found"})
+		response.Error(c, http.StatusNotFound, "Failed to get transaction by id "+idParam+": "+err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"transaction": transaction})
+	response.Success(c, http.StatusOK, "get transaction by id "+idParam, transaction)
 }
 
 func GetTransactionSummary(c *gin.Context) {
@@ -92,19 +93,18 @@ func GetTransactionSummary(c *gin.Context) {
 	endDate := c.Query("end_date")
 
 	if startDate != "" && endDate != "" && startDate > endDate {
-		log.Error("Invalid Data Range")
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid data range"})
+		log.Error("Invalid data range")
+		response.Error(c, http.StatusBadRequest, "Invalid data range")
 		return
 	}
 
 	summary, err := services.GetTransactionSummary(userId, startDate, endDate)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		response.Error(c, http.StatusInternalServerError, "Failed to get data transaction summary : "+err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Transaction summary retrieved successfully",
+	response.Success(c, http.StatusOK, "Successfully retrieved transaction summary", gin.H{
 		"summary": summary,
 	})
 }
@@ -116,26 +116,24 @@ func GetTransactionSummaryByCategory(c *gin.Context) {
 	tType := c.Query("type")
 
 	if startDate != "" && endDate != "" && startDate > endDate {
-		log.Error("Invalid Data Range")
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid data range"})
+		log.Error("Invalid data range")
+		response.Error(c, http.StatusBadRequest, "Invalid data range")
 		return
 	}
 
 	if tType == "" {
 		log.Error("Type can't be empty")
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Type can't be empty"})
+		response.Error(c, http.StatusBadRequest, "Type can't be empty")
+		return
 	}
 
 	summary, err := services.GetTransactionSummaryByCategory(userId, startDate, endDate, tType)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		response.Error(c, http.StatusInternalServerError, "Failed to get data summary by category : "+err.Error())
 		return
 	}
 
-	log.Info("summary : ", summary)
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Transaction summary retrieved successfully",
+	response.Success(c, http.StatusOK, "Successfully retrieve transaction summary by category", gin.H{
 		"summary": summary,
 	})
 }
@@ -145,7 +143,8 @@ func UpdateTransaction(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid transaction ID"})
+		response.Error(c, http.StatusBadRequest, "Invalid input transaction id : "+err.Error())
+		return
 	}
 
 	userId := c.GetUint("user_id")
@@ -153,39 +152,40 @@ func UpdateTransaction(c *gin.Context) {
 	var input models.Transaction
 	if err := c.ShouldBindBodyWithJSON(&input); err != nil {
 		log.Error("Invalid transaction input : ", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.Error(c, http.StatusBadRequest, "Invalid transaction input : "+err.Error())
 		return
 	}
 
 	if err := validator.Validate.Struct(&input); err != nil {
 		log.Error("Transaction validation failed : ", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.Error(c, http.StatusBadRequest, "Transaction validation failed : "+err.Error())
 		return
 	}
 
 	if err := services.UpdateTransaction(uint(id), userId, &input); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.Error(c, http.StatusInternalServerError, "Failed to udpate data transaction : "+err.Error())
 		return
 	}
 
-	log.Info("Updated Successfully for user : ", userId)
-	c.JSON(http.StatusOK, gin.H{"message": "Updated Successfully"})
+	log.Info("Updated successfully for user : ", userId)
+	response.Success(c, http.StatusOK, "Updated successfully", nil)
 }
 
 func DeleteTransaction(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid transaction ID"})
+		response.Error(c, http.StatusBadRequest, "Invalid input transaction id : "+err.Error())
+		return
 	}
 
 	userId := c.GetUint("user_id")
 
 	if err := services.DeleteTransaction(uint(id), userId); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.Error(c, http.StatusInternalServerError, "Failed to delete data transaction : "+err.Error())
 		return
 	}
 
-	log.Info("Deleted Successfully for user : ", userId)
-	c.JSON(http.StatusOK, gin.H{"message": "Deleted Successfully"})
+	log.Info("Deleted successfully for user : ", userId)
+	response.Success(c, http.StatusOK, "Deleted successfully", nil)
 }
